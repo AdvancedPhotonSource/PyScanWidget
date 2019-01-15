@@ -17,7 +17,7 @@ def getVariableDict():
 	return variableDict
 
 def signal_handler(signal, frame):
-		print 'sigint'
+		print ('sigint')
 		sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -28,25 +28,23 @@ def update_variable_dict():
 	if len(sys.argv) > 1:
 		strArgv = sys.argv[1]
 		argDic = json.loads(strArgv)
-	print 'orig variable dict', variableDict
-	for k,v in argDic.iteritems():
+	print ('orig variable dict', variableDict)
+	for k,v in argDic.items():
 		variableDict[k] = v
-	print 'new variable dict', variableDict
+	print ('new variable dict', variableDict)
 
 
 def start_scan():
-	print 'running scan'
+	print ('running scan')
 	time.sleep(10)
+	print ('finished scan')
 
 
 def main():
 	update_variable_dict()
-	if variableDict.has_key('StopTheScan'):
-		print 'stopping and exit'
-		return
 	f_arr = [float(x) for x in variableDict['my_arr'].split(',') ]
-	print 'farray', f_arr
-	print variableDict
+	print ('farray', f_arr)
+	print (variableDict)
 	start_scan()
 
 

@@ -55,6 +55,7 @@
 #include <QScrollArea>
 #include <QSplitter>
 #include <QToolBar>
+#include <QPlainTextEdit>
 
 #include <ScanBuilder.h>
 #include <ScanUserWidget.h>
@@ -79,52 +80,33 @@ public:
     */
    AcquisitionWidget(QWidget* parent = NULL);
 
-   /**
-    * @brief returns the current loaded and selected scan to run
-    * @return
-    */
-   //ScanAdminWidget* getSelectedScan();
-
    void newScanLoaded(ScanAdminWidget* saw);
 
-  /**
-    * @brief start built scan
-    */
-   void startScanAcquisition();
+
+public slots:
+
+   void processFinished();
 
    /**
-    * Indicate user request for stopping the live acquisition/recording.
-    */
-   void stopAcquisition();
+     * @brief start built scan
+     */
+    void startScanAcquisition();
 
+    /**
+     * Send sig term to scan
+     */
+    void stopAcquisition();
 
-signals:
+    /*
+     * kill the process
+     */
+    void killAcquisition();
 
-   /**
-    * Signal emitted when the acquisition mode is changed 
-    * through this widget
-    */
-   void emitAcquisitionModeUpdated(int);
-
-   /**
-    * Signal emitted when start button is clicked 
-    */
-   void emitStartAcquisition();
-
-   /**
-    * Signal emitted when stop button is clicked.
-    */
-   void emitStopAcquisition();
-
-   /**
-    * Signal emitted when record buttong is clicked
-    */
-   void emitRecordAcquisition();
-
-   /**
-    * signal for m_spinNumberOfImages changed
-    */
-   void imagesChanged(int);
+    /**
+     * @brief newProcessOutput
+     * @param output
+     */
+    void newProcessOutput(QString output);
 
 private:
 
@@ -138,10 +120,21 @@ private:
     */
    QAction* m_stopAction;
 
+   /**
+    * @brief m_killAction
+    */
+   QAction* m_killAction;
+
+   /**
+    * @brief m_acquisitionGroup
+    */
    QActionGroup*  m_acquisitionGroup;
 
-   std::shared_ptr<ScanPythonProcess> m_playScan;
+   ScanPythonProcess *m_playScan;
+
    ScanUserWidget* m_scanUserWidget;
+
+   QPlainTextEdit *outputTextbox;
 
 };
 

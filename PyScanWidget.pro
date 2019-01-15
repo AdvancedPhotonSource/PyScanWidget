@@ -28,7 +28,7 @@ QMAKE_EXT_CPP += .c
 DESTDIR = ./bin
 
 # Release or Debug
-CONFIG += release
+CONFIG += debug
 CONFIG += ordered
 CONFIG += console
 DEFINES += WITH_DOM 

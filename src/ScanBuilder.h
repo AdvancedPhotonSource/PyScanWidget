@@ -66,7 +66,7 @@ public:
     * @param playScan
     * @param saw
     */
-   static void buildScan(std::shared_ptr<ScanPythonProcess> *playScan, ScanAdminWidget* saw);
+   static void buildScan(ScanPythonProcess *playScan, ScanAdminWidget* saw);
 
 
 };

@@ -49,20 +49,28 @@
 
 /*---------------------------------------------------------------------------*/
 
-void ScanBuilder::buildScan(std::shared_ptr<ScanPythonProcess> *playScan,
+void ScanBuilder::buildScan(ScanPythonProcess *playScan,
                             ScanAdminWidget* saw)
 {
 
-   QString path = saw->getPath();
-   if(path.endsWith(".py"))
-   {
-       (*playScan)->setFullPath(path);
-       (*playScan)->setVariables(saw->getPlayVariableModel()->getAttrs());
-   }
-   else
-   {
+    if(playScan == nullptr)
+    {
+        return;
+    }
+
+    if(saw != nullptr)
+    {
+        QString path = saw->getPath();
+       if(path.length() > 0 && path.endsWith(".py"))
+       {
+           playScan->setFullPath(path);
+           playScan->setVariables(saw->getPlayVariableModel()->getAttrs());
+       }
+       else
+       {
 // TODO: add qmessagebox that file is not supported
-   }
+       }
+    }
 }
 
 /*---------------------------------------------------------------------------*/

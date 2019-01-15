@@ -50,37 +50,49 @@
 
 AcquisitionWidget::AcquisitionWidget(QWidget* parent): QWidget(parent)
 {
-   m_playScan = std::shared_ptr<ScanPythonProcess>(new ScanPythonProcess);
+   m_playScan = new ScanPythonProcess();
+
+   connect(m_playScan, SIGNAL(processFinishedSig()),
+           this, SLOT(processFinished()));
+
+   connect(m_playScan, SIGNAL(readReady(QString)),
+           this, SLOT(newProcessOutput(QString)));
 
       // Top level layout
     QVBoxLayout* mainLayout = new QVBoxLayout();
+    QVBoxLayout* vLayout = new QVBoxLayout();
+    QHBoxLayout* hLayout = new QHBoxLayout();
 
     QToolBar *scanToolbar = new QToolBar(this);
     scanToolbar->setFloatable(false);
     scanToolbar->setMovable(false);
 
+    outputTextbox = new QPlainTextEdit();
+    outputTextbox->resize(300, 400);
+
    m_startAction = new QAction(QIcon(":images/start.png"), tr("Start"), this);
    m_stopAction = new QAction(QIcon(":images/stop.png"), tr("Stop"), this);
+   m_killAction = new QAction(QIcon(":images/kill-proc.png"), tr("Kill"), this);
    m_stopAction->setEnabled(false);
 
    connect(m_startAction,
            SIGNAL(triggered()),
            this,
-           SIGNAL(emitStartAcquisition()));
+           SLOT(startScanAcquisition()));
 
    connect(m_stopAction,
            SIGNAL(triggered()),
            this,
-           SIGNAL(emitStopAcquisition()));
+           SLOT(stopAcquisition()));
 
-   // Acquisition action group
-   m_acquisitionGroup = new QActionGroup(this);
-   m_acquisitionGroup->setExclusive(false);
-   m_acquisitionGroup->addAction(m_startAction);
-   m_acquisitionGroup->addAction(m_stopAction);
+   connect(m_killAction,
+           SIGNAL(triggered()),
+           this,
+           SLOT(killAcquisition()));
 
    scanToolbar->addAction(m_startAction);
    scanToolbar->addAction(m_stopAction);
+   scanToolbar->addAction(m_killAction);
 
    m_scanUserWidget = new ScanUserWidget();
 
@@ -89,10 +101,21 @@ AcquisitionWidget::AcquisitionWidget(QWidget* parent): QWidget(parent)
 //           this,
 //           SLOT(newScanLoaded(ScanAdminWidget*)));
 
-      mainLayout->addWidget(scanToolbar);
-      mainLayout->addWidget(m_scanUserWidget);
+      vLayout->addWidget(scanToolbar);
+      vLayout->addWidget(m_scanUserWidget);
+      hLayout->addLayout(vLayout);
+      hLayout->addWidget(outputTextbox);
 
+      mainLayout->addLayout(hLayout);
       setLayout(mainLayout);
+}
+
+/*---------------------------------------------------------------------------*/
+
+void AcquisitionWidget::newProcessOutput(QString output)
+{
+    outputTextbox->appendPlainText(output);
+    //outputTextbox->verticalScrollBar()->setValue(outputTextbox->verticalScrollBar()->maximum());
 }
 
 /*---------------------------------------------------------------------------*/
@@ -113,20 +136,26 @@ void AcquisitionWidget::newScanLoaded(ScanAdminWidget* saw)
 */
 }
 
+void AcquisitionWidget::processFinished()
+{
+    m_startAction->setEnabled(true);
+    m_stopAction->setEnabled(false);
+}
+
 /*---------------------------------------------------------------------------*/
 
 void AcquisitionWidget::startScanAcquisition()
 {
-//      Scan::reset();
-
-         m_playScan.reset();
-
-         m_playScan = std::shared_ptr<ScanPythonProcess>(new ScanPythonProcess);
-
-         ScanBuilder::buildScan(&m_playScan, m_scanUserWidget->getSelectedScan());
-
- //        m_scan->launchSingle(m_playScan);
-
+    if(m_playScan != nullptr)
+    {
+        outputTextbox->clear();
+        ScanBuilder::buildScan(m_playScan, m_scanUserWidget->getSelectedScan());
+        if( m_playScan->execute() )
+        {
+            m_startAction->setEnabled(false);
+            m_stopAction->setEnabled(true);
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -134,6 +163,18 @@ void AcquisitionWidget::startScanAcquisition()
 void AcquisitionWidget::stopAcquisition()
 {
 
- //  m_scan->stop();
+    m_playScan->sendSigTerm();
+
+}
+
+/*---------------------------------------------------------------------------*/
+
+void AcquisitionWidget::killAcquisition()
+{
+
+    m_playScan->terminateProcess();
+    m_startAction->setEnabled(true);
+    m_stopAction->setEnabled(false);
+
 
 }

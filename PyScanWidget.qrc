@@ -22,5 +22,6 @@
         <file>images/marker.png</file>
         <file>images/up.png</file>
         <file>images/down2.png</file>
+        <file>images/kill-proc.png</file>
     </qresource>
 </RCC>

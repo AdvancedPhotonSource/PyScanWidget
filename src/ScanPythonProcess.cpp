@@ -55,7 +55,7 @@ using namespace std;
 
 ScanPythonProcess::ScanPythonProcess()
 {
-    m_Process = NULL;
+    m_Process = nullptr;
     m_stopCntr = 0;
     m_fullPath = "";
 }
@@ -65,7 +65,7 @@ ScanPythonProcess::ScanPythonProcess()
 ScanPythonProcess::ScanPythonProcess(QString fullPath)
 {
 
-    m_Process = NULL;
+    m_Process = nullptr;
     setFullPath(fullPath);
     m_stopCntr = 0;
 }
@@ -110,8 +110,15 @@ void ScanPythonProcess::dump(int level)
 
 /*---------------------------------------------------------------------------*/
 
-void ScanPythonProcess::execute()
+bool ScanPythonProcess::execute()
 {
+    if( m_Process != nullptr)
+    {
+        disconnect(m_Process, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
+        delete m_Process;
+        m_Process = nullptr;
+    }
+
     QStringList m_arguments;
     QString variableDic = "{";
 
@@ -138,50 +145,77 @@ void ScanPythonProcess::execute()
     if(m_fullPath.length() < 1)
     {
         qDebug()<<"script path not set! ";
-        return;
+        return false;
     }
 
     m_arguments.append(m_fullPath);
     m_arguments.append(variableDic);
 
     m_stopCntr = 0;
-    QProcess myProcess;
-    m_Process = &myProcess;
-    qDebug()<<"start python "<<m_fullPath<<" : "<<variableDic;
-    myProcess.setProcessChannelMode(QProcess::ForwardedChannels);
-    myProcess.start("python", m_arguments);
+    m_Process = new QProcess();
+    connect(m_Process, SIGNAL(finished(int ,QProcess::ExitStatus)),
+            this, SLOT(processFinished(int ,QProcess::ExitStatus)));
 
-    while(myProcess.waitForFinished(1000) == false)
+    connect(m_Process, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
+    qDebug()<<"start python "<<m_fullPath<<" : "<<variableDic;
+    //m_Process->setProcessChannelMode(QProcess::ForwardedChannels);
+    m_Process->setProcessChannelMode(QProcess::MergedChannels);
+    m_Process->start("python", m_arguments);
+    return true;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void ScanPythonProcess::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+
+    qDebug()<<"finish python "<<m_fullPath<<" Status "<<exitCode;
+    if (m_Process != nullptr)
     {
-        //qDebug()<<"running scan";
+        disconnect(m_Process, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
+        delete m_Process;
     }
-    m_Process = NULL;
-    qDebug()<<"finish python "<<m_fullPath<<" Status "<<myProcess.exitCode();
+    m_Process = nullptr;
+    emit(processFinishedSig());
+}
+
+/*---------------------------------------------------------------------------*/
+
+void ScanPythonProcess::sendSigTerm()
+{
+    if(m_Process != nullptr)
+    {
+        qDebug()<<"Sending SigInt to stop scan pid"<<m_Process->pid();
+        m_Process->kill();
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+void ScanPythonProcess::terminateProcess()
+{
+
+    if(m_Process != nullptr)
+    {
+        qDebug()<<"ScanPythonProcess terminate";
+        m_Process->terminate();
+    }
 
 }
 
 /*---------------------------------------------------------------------------*/
 
-void ScanPythonProcess::reset()
+void ScanPythonProcess::processReadyRead()
 {
-    qDebug()<<"ScanPythonProcess Reset";
-    if(m_Process != NULL)
-    {
-        m_stopCntr++;
-        if(m_stopCntr == 1)
-        {
-            qDebug()<<"Sending SigInt to stop scan pid"<<m_Process->pid();
-			m_Process->kill();
-        }
-        else
-        {
-            qDebug()<<"ScanPythonProcess terminate";
-            m_Process->terminate();
-            m_Process = NULL;
-        }
-    }
-}
 
+    if(m_Process != nullptr)
+    {
+        QByteArray output_array = m_Process->readAll();
+        QString output = QString(output_array);
+        emit readReady(output);
+    }
+
+}
 
 /*---------------------------------------------------------------------------*/
 

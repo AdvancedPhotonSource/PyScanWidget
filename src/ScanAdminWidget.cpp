@@ -60,7 +60,7 @@ ScanAdminWidget::ScanAdminWidget(Preferences* preferences, QWidget* parent)
    // Create GUI components
    createComponents();
 
-   if(m_preferences != NULL)
+   if(m_preferences != nullptr)
    {
       QString lastSave = m_preferences->readValueKey(Preferences::LastScanSave).toString();
       if(lastSave.length() > 0)
@@ -82,12 +82,13 @@ ScanAdminWidget::~ScanAdminWidget()
 
 void ScanAdminWidget::createComponents()
 {
-
+/*
    QPushButton* btnSave = new QPushButton("Save Scan");
    connect (btnSave,
             SIGNAL(clicked()),
             this,
             SLOT(saveScan()));
+            */
    QPushButton* btnLoad = new QPushButton("Load Scan");
    connect (btnLoad,
             SIGNAL(clicked()),
@@ -104,7 +105,7 @@ void ScanAdminWidget::createComponents()
    QHBoxLayout* layout = new QHBoxLayout();
    QVBoxLayout* mainLayout = new QVBoxLayout();
 
-   layout->addWidget(btnSave);
+   //layout->addWidget(btnSave);
    layout->addWidget(btnLoad);
 
    m_scanFilename = new QLabel();

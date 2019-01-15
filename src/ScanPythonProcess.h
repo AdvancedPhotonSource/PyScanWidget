@@ -50,7 +50,7 @@
 /*---------------------------------------------------------------------------*/
 
 #include <ScanAttribute.h>
-
+#include <QObject>
 #include <memory>
 
 #include <string>
@@ -62,8 +62,10 @@
 
 /*---------------------------------------------------------------------------*/
 
-class ScanPythonProcess
+class ScanPythonProcess : public QObject
 {
+
+    Q_OBJECT
 
 public:
 
@@ -79,13 +81,26 @@ public:
 
    void dump(int level);
 
-   void execute();
+   bool execute();
 
-   void reset();
+   void sendSigTerm();
+
+   void terminateProcess();
 
    void setFullPath(QString fullPath);
 
    void setVariables(QList<ScanAttribute> varaibleList);
+
+signals:
+   void processFinishedSig();
+
+   void readReady(QString lines);
+
+public slots:
+
+    void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
+
+    void processReadyRead();
 
 private:
 
@@ -96,6 +111,8 @@ private:
    QList<ScanAttribute> m_variables;
 
    QString m_fullPath;
+
+
 
 };
 
